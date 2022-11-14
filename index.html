@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>EA-4</title>
+  </head>
+  <body>
+    <div class="container">
+        <br>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="row">
+                    <pre>
+                        x=cos(u) x sin(v)
+                        y=cos(v)+ln(tan(v/c))+c/9
+                        z=sin(u) x cos(v)
+                        u= -pi...pi ,v=0....2
+                    </pre>
+                </div>
+                <div class="row justify-content-center">
+                    <canvas id="shape_1" width="400" height="400"></canvas>
+                </div>
+                <div class="row justify-content-center">
+                    <form>
+                        <div class="form-group">
+                          <label for="formControlRange">Variable für Form 1</label>
+                          <input type="range" class="form-control-range" id="shape_1_variable" value="2" min="0.9" step="0.4" max="5" onchange="DrawShapeOne(this.value)">
+                        </div>
+                        <div class="row justify-content-center">
+                            c= <span id="variable_1_field">2</span>
+                        </div>
+                      </form>
+                </div>
+
+    
+            </div>
+            <div class="col-sm-6">
+                <div class="row">
+                    <pre>
+                        x=cosh(v/c) x cos(u)
+                        y=v
+                        z=cosh(v/c) x sin(u)
+                        u= -pi...pi ,v=-2....2
+                    </pre>
+                </div>
+                <div class="row justify-content-center">
+                    <canvas id="shape_2" width="400" height="400"></canvas>
+    
+                </div>
+                <div class="row justify-content-center">
+                    <form>
+                        <div class="form-group">
+                          <label for="formControlRange">Variable für Form 2</label>
+                          <input type="range" class="form-control-range" id="shape_2_variable" value="0.8" step="0.1" min="0.5" max="1.5" onchange="DrawShapeTwo(this.value)">
+                        </div>
+                        <div class="row justify-content-center">
+                           c= <span id="variable_2_field">0.8</span>
+                        </div>
+                      </form>
+                </div>
+                
+            </div>
+        </div>
+
+    </div>
+   
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script>
+
+var field_1=document.getElementById("variable_1_field");
+var field_2=document.getElementById("variable_2_field");
+
+var shape_1 = document.getElementById('shape_1');
+var gl = shape_1.getContext('experimental-webgl');
+
+// Pipeline setup.
+gl.clearColor(.95, .95, .95, 1);
+ // Backface culling.
+ gl.frontFace(gl.CCW);
+ gl.enable(gl.CULL_FACE);
+ gl.cullFace(gl.BACK);
+
+
+ // Compile vertex shader.
+ var vsSource = '' +
+ 'attribute vec3 pos;' +
+ 'attribute vec4 col;' +
+ 'varying vec4 color;' +
+ 'void main(){' + 'color = col;' +
+ 'gl_Position = vec4(pos, 1);' +
+ '}';
+ var vs = gl.createShader(gl.VERTEX_SHADER);
+ gl.shaderSource(vs, vsSource);
+ gl.compileShader(vs);
+
+ // Compile fragment shader.
+ fsSouce = 'precision mediump float;' +
+ 'varying vec4 color;' +
+ 'void main() {' +
+ 'gl_FragColor = color;' +
+ '}';
+ var fs = gl.createShader(gl.FRAGMENT_SHADER);
+ gl.shaderSource(fs, fsSouce);
+ gl.compileShader(fs);
+
+ // Link shader together into a prog_1ram.
+ var prog_1 = gl.createProgram();
+ gl.attachShader(prog_1, vs);
+ gl.attachShader(prog_1, fs);
+ gl.bindAttribLocation(prog_1, 0, "pos");
+ gl.linkProgram(prog_1);
+ gl.useProgram(prog_1);
+
+
+ // Vertex data.
+ // Positions, Index data.
+ var vertices, indicesLines, indicesTris;
+ DrawShapeOne(2);
+function DrawShapeOne(variable_1){
+    field_1.innerHTML=variable_1;
+    // Fill the data arrays.
+    createVertexDataShapeOne(variable_1);
+
+    // Setup position vertex buffer object.
+    var vboPos = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vboPos);
+    gl.bufferData(gl.ARRAY_BUFFER,vertices, gl.STATIC_DRAW);
+    // Bind vertex buffer to attribute variable.
+    var posAttrib = gl.getAttribLocation(prog_1, 'pos');
+    gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT,false, 0, 0);
+    gl.enableVertexAttribArray(posAttrib);
+
+    // Setup constant color.
+    var colAttrib = gl.getAttribLocation(prog_1, 'col');
+
+    // Setup lines index buffer object.
+    var iboLines = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboLines);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indicesLines, gl.STATIC_DRAW);
+    iboLines.numberOfElements = indicesLines.length;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+    // Setup tris index buffer object.
+    var iboTris = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboTris);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indicesTris, gl.STATIC_DRAW);
+    iboTris.numberOfElements = indicesTris.length;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+    // Clear framebuffer and render primitives.
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Setup rendering tris.
+    gl.vertexAttrib4f(colAttrib, 0.2, 0.7, 0.4, 1);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboTris);
+    gl.drawElements(gl.TRIANGLES,
+    iboTris.numberOfElements, gl.UNSIGNED_SHORT, 0);
+
+    // Setup rendering lines.
+    gl.vertexAttrib4f(colAttrib, 1, 1, 1, 1);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboLines);
+    gl.drawElements(gl.LINES,
+    iboLines.numberOfElements, gl.UNSIGNED_SHORT, 0);
+
+
+    function createVertexDataShapeOne(variable_1){
+        var n = 20;
+        var m = 20;
+        // Positions.
+        vertices = new Float32Array(3*(n+1)*(m+1));
+        // Index data for Linestrip. 
+        indicesLines = new Uint16Array(2 * 2 * n * m);
+        // Index data for Triangles.
+        indicesTris = new Uint16Array(3 * 2 * n * m);
+
+        var du = 2*Math.PI/n;
+        var dv = 2/m;
+        var s_value=variable_1;
+        // Counter for entries in index array.
+        var iLines = 0;
+        var iTris = 0;
+
+        // Loop angle t.
+        for(var i=0, u=-Math.PI; i <= n; i++, u += du)  {
+        // Loop radius r.
+            for(var j=0, v=0.01; j <= m; j++, v += dv) {
+
+                var iVertex = i*(m+1) + j;
+
+                var x =0.8* Math.cos(u)* Math.sin(v);
+                var z =0.8* Math.sin(u)* Math.cos(v);
+                var y = 0.2*(Math.cos(v)+Math.log2(Math.tan(v/s_value)))+(s_value/9);
+
+                // Set vertex positions.
+                vertices[iVertex * 3] = x;
+                vertices[iVertex * 3 + 1] = y;
+                vertices[iVertex * 3 + 2] = z;
+
+                // Set index.
+                // Line on beam.
+                if(j>0 && i>0){
+                indicesLines[iLines++] = iVertex - 1;
+                indicesLines[iLines++] = iVertex;
+                }
+                // Line on ring.
+                if(j>0 && i>0){
+                indicesLines[iLines++] = iVertex - (m+1);
+                indicesLines[iLines++] = iVertex;
+                }
+
+                // Set index.
+                // Two Triangles.
+                if(j>0 && i>0){
+                indicesTris[iTris++] = iVertex;
+                indicesTris[iTris++] = iVertex - 1;
+                indicesTris[iTris++] = iVertex - (m+1);
+                //
+                indicesTris[iTris++] = iVertex - 1;
+                indicesTris[iTris++] = iVertex - (m+1) - 1;
+                indicesTris[iTris++] = iVertex - (m+1);
+                }
+            }
+        }
+    }
+
+}
+
+ 
+var shape_2 = document.getElementById('shape_2');
+var gl2 = shape_2.getContext('experimental-webgl');
+// Pipeline setup.
+gl2.clearColor(.95, .95, .95, 1);
+// Backface culling.
+gl2.frontFace(gl2.CCW);
+gl2.enable(gl2.CULL_FACE);
+gl2.cullFace(gl2.BACK);
+
+
+// Compile vertex shader.
+var vsSource = '' +
+'attribute vec3 pos;' +
+'attribute vec4 col;' +
+'varying vec4 color;' +
+'void main(){' + 'color = col;' +
+'gl_Position = vec4(pos, 1);' +
+'}';
+var vs = gl2.createShader(gl2.VERTEX_SHADER);
+gl2.shaderSource(vs, vsSource);
+gl2.compileShader(vs);
+
+// Compile fragment shader.
+fsSouce = 'precision mediump float;' +
+'varying vec4 color;' +
+'void main() {' +
+'gl_FragColor = color;' +
+'}';
+var fs = gl2.createShader(gl.FRAGMENT_SHADER);
+gl2.shaderSource(fs, fsSouce);
+gl2.compileShader(fs);
+// Link shader together into a prog_1ram.
+var prog_2 = gl2.createProgram();
+gl2.attachShader(prog_2, vs);
+gl2.attachShader(prog_2, fs);
+gl2.bindAttribLocation(prog_2, 0, "pos");
+gl2.linkProgram(prog_2);
+gl2.useProgram(prog_2);
+DrawShapeTwo(0.8);
+function DrawShapeTwo(variable_2){
+    variable_2_field.innerHTML=variable_2;
+    createVertexDataShapeTwo(variable_2);
+
+    // Setup position vertex buffer object.
+    var vboPos = gl2.createBuffer();
+    gl2.bindBuffer(gl2.ARRAY_BUFFER, vboPos);
+    gl2.bufferData(gl2.ARRAY_BUFFER,vertices, gl2.STATIC_DRAW);
+    // Bind vertex buffer to attribute variable.
+    var posAttrib = gl2.getAttribLocation(prog_2, 'pos');
+    gl2.vertexAttribPointer(posAttrib, 3, gl2.FLOAT,false, 0, 0);
+    gl2.enableVertexAttribArray(posAttrib);
+
+    // Setup constant color.
+    var colAttrib = gl2.getAttribLocation(prog_2, 'col');
+
+    // Setup lines index buffer object.
+    var iboLines = gl2.createBuffer();
+    gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, iboLines);
+    gl2.bufferData(gl2.ELEMENT_ARRAY_BUFFER,indicesLines, gl2.STATIC_DRAW);
+    iboLines.numberOfElements = indicesLines.length;
+    gl2.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+    // Setup tris index buffer object.
+    var iboTris = gl2.createBuffer();
+    gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, iboTris);
+    gl2.bufferData(gl2.ELEMENT_ARRAY_BUFFER,indicesTris, gl2.STATIC_DRAW);
+    iboTris.numberOfElements = indicesTris.length;
+    gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, null);
+
+    // Clear framebuffer and render primitives.
+    gl2.clear(gl2.COLOR_BUFFER_BIT);
+
+    // Setup rendering tris.
+    gl2.vertexAttrib4f(colAttrib,  0, 0.7, 1, 1);
+    gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, iboTris);
+    gl2.drawElements(gl2.TRIANGLES,iboTris.numberOfElements, gl2.UNSIGNED_SHORT, 0);
+
+    // Setup rendering lines.
+    gl2.vertexAttrib4f(colAttrib, 1, 1, 1, 1);
+    gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, iboLines);
+    gl2.drawElements(gl2.LINES,iboLines.numberOfElements, gl2.UNSIGNED_SHORT, 0);
+
+
+
+    function createVertexDataShapeTwo(variable_2){
+    var n = 20;
+    var m = 20;
+    // Positions.
+    vertices = new Float32Array(3*(n+1)*(m+1));
+    // Index data for Linestrip. 
+    // Index data.
+    indicesLines = new Uint16Array(2 * 2 * n * m);
+    indicesTris = new Uint16Array(3 * 2 * n * m);
+
+    var du = 2*Math.PI/n;
+    var dv = 4/m;
+    c=variable_2;
+
+    // Counters for entries in index array.
+    var iLines = 0;
+    var iTris = 0;
+
+    // Loop angle u.
+    for(var i=0, u=-Math.PI/12; i <= n; i++, u += du)  {
+    // Loop radius r.
+        for(var j=0, v=-2; j <= m; j++, v += dv) {
+
+            var iVertex = i*(m+1) + j;
+
+            var x =0.2* c*Math.cosh(v/c)*Math.cos(u);
+            var z =0.2* c*Math.cosh(v/c)*Math.sin(u);
+            var y =0.3* v;
+            
+
+            // Set vertex positions.
+            vertices[iVertex * 3] = x;
+            vertices[iVertex * 3 + 1] = y;
+            vertices[iVertex * 3 + 2] = z;
+
+            // Set index.
+            // Line on beam.
+            if(j>0 && i>0){
+            indicesLines[iLines++] = iVertex - 1;
+            indicesLines[iLines++] = iVertex;
+            }
+            // Line on ring.
+            if(j>0 && i>0){
+            indicesLines[iLines++] = iVertex - (m+1);
+            indicesLines[iLines++] = iVertex;
+            }
+
+            // Set index.
+            // Two Triangles.
+            if(j>0 && i>0){
+            indicesTris[iTris++] = iVertex;
+            indicesTris[iTris++] = iVertex - 1;
+            indicesTris[iTris++] = iVertex - (m+1);
+            //
+            indicesTris[iTris++] = iVertex - 1;
+            indicesTris[iTris++] = iVertex - (m+1) - 1;
+            indicesTris[iTris++] = iVertex - (m+1);
+            }
+        }
+    }
+    }
+}
+
+</script>  
+</body>
+</html>
+
+
+
+
